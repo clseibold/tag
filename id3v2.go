@@ -412,6 +412,25 @@ func (r *unsynchroniser) Read(p []byte) (int, error) {
 	return i, nil
 }
 
+// Skips past the ID3v2 tags in the reader
+func SkipID3v2Tags(r io.Reader) error {
+	h, offset, err := readID3v2Header(r)
+	if err != nil {
+		//return nil, err
+		return err
+	}
+
+	var ur io.Reader = r
+	if h.Unsynchronisation {
+		ur = &unsynchroniser{Reader: r}
+	}
+
+	_, err2 := readID3v2Frames(ur, offset, h)
+
+	// TODO: Skip the Xing header, like in getMp3Infos()
+	return err2
+}
+
 // ReadID3v2Tags parses ID3v2.{2,3,4} tags from the io.ReadSeeker into a Metadata, returning
 // non-nil error on failure.
 func ReadID3v2Tags(r io.ReadSeeker) (Metadata, error) {
@@ -429,12 +448,23 @@ func ReadID3v2Tags(r io.ReadSeeker) (Metadata, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	mp3, err := getMp3Infos(r, false)
+	if err != nil {
+		return nil, err
+	}
+	f["stream_type"] = fmt.Sprintf("MPEG %v Layer %v", mp3.Version, mp3.Layer)
+	f["stream_bitrate"] = fmt.Sprintf("%v kbps %v", mp3.Bitrate, mp3.Type)
+	f["stream_audio"] = fmt.Sprintf("%v Hz %v", mp3.Sampling, mp3.Mode)
+	f["stream_size"] = mp3.Size
+	f["stream_length"] = int(mp3.Length)
+
 	return metadataID3v2{header: h, frames: f}, nil
 }
 
 var id3v2genreRe = regexp.MustCompile(`(.*[^(]|.* |^)\(([0-9]+)\) *(.*)$`)
 
-//  id3v2genre parse a id3v2 genre tag and expand the numeric genres
+// id3v2genre parse a id3v2 genre tag and expand the numeric genres
 func id3v2genre(genre string) string {
 	c := true
 	for c {
