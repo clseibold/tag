@@ -426,8 +426,11 @@ func SkipID3v2Tags(r io.Reader) error {
 	}
 
 	_, err2 := readID3v2Frames(ur, offset, h)
+	if err2 != nil {
+		return err2
+	}
 
-	// TODO: Skip the Xing header, like in getMp3Infos()
+	_, er2 = getMp3Infos(r, false)
 	return err2
 }
 
