@@ -413,7 +413,7 @@ func (r *unsynchroniser) Read(p []byte) (int, error) {
 }
 
 // Skips past the ID3v2 tags in the reader
-func SkipID3v2Tags(r io.Reader) error {
+func SkipID3v2Tags(r io.ReadSeeker) error {
 	h, offset, err := readID3v2Header(r)
 	if err != nil {
 		//return nil, err
@@ -430,7 +430,7 @@ func SkipID3v2Tags(r io.Reader) error {
 		return err2
 	}
 
-	_, er2 = getMp3Infos(r, false)
+	_, err2 = getMp3Infos(r, false)
 	return err2
 }
 
