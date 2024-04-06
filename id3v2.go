@@ -433,14 +433,14 @@ func SkipID3v2Tags(r io.ReadSeeker) error {
 	var buf [8]byte
 	for ; buf[0] == 0; _, err = r.Read(buf[0:1]) {
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	// Seek back 1 from current position
 	_, err2 = r.Seek(-1, 1)
 	if err2 != nil {
-		return nil, err
+		return err
 	}
 
 	return nil
