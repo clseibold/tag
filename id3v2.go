@@ -430,6 +430,7 @@ func SkipID3v2Tags(r io.ReadSeeker) error {
 	}
 
 	// skip the padding at the start
+	var buf [8]byte
 	for ; buf[0] == 0; _, err = r.Read(buf[0:1]) {
 		if err != nil {
 			return nil, err
