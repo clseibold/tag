@@ -416,7 +416,6 @@ func (r *unsynchroniser) Read(p []byte) (int, error) {
 func SkipID3v2Tags(r io.ReadSeeker) error {
 	h, offset, err := readID3v2Header(r)
 	if err != nil {
-		//return nil, err
 		return err
 	}
 
@@ -430,8 +429,20 @@ func SkipID3v2Tags(r io.ReadSeeker) error {
 		return err2
 	}
 
-	_, err2 = getMp3Infos(r, false)
-	return err2
+	// skip the padding at the start
+	for ; buf[0] == 0; _, err = r.Read(buf[0:1]) {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Seek back 1 from current position
+	_, err2 = r.Seek(-1, 1)
+	if err2 != nil {
+		return nil, err
+	}
+
+	return nil
 }
 
 // ReadID3v2Tags parses ID3v2.{2,3,4} tags from the io.ReadSeeker into a Metadata, returning
